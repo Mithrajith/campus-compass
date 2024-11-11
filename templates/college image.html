@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Compass Pro</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="all_styles.css">
+
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-compass fa-2x"></i>
+                <h1>Campus Compass</h1>
+            </div>
+        </br> </br>
+            <form class="form-container" id="reviewForm">
+                <div class="form-section">
+                    <label class="form-label" for="name">College Name</label>
+                    <input type="text" id="name" class="form-input" placeholder="Enter the College name" required>
+                </div>
+            </br> </br>
+                <div class="form-section">
+                    <label class="form-label">Upload Images</label>
+                    <div class="file-upload" onclick="document.getElementById('upload').click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Click or drag images here</p>
+                        <input type="file" id="upload" hidden multiple accept="image/*" onchange="loadImages(event)">
+                    </div>
+                </div>
+            </br> </br>
+                <div class="form-section">
+                    <label class="form-label" for="review">Your Review</label>
+                    <textarea id="review" class="form-input" rows="4" placeholder="Share your campus experience..." required></textarea>
+                </div>
+            </br> </br>
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-paper-plane"></i>
+                    Submit Review
+                </button>
+            </br> </br>
+            </form>
+            <a href="home page.html" class="navigate-link">Visit Campus Compass</a>
+        </div>
+<!-- 
+        <button class="toggle-btn" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button> -->
+
+        <main class="main-content">
+            <div class="gallery" id="image-upload-area">
+                <p class="text-center"></p>
+            </div>
+        </main>
+    </div>
+
+    <div class="search-bar">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search reviews...">
+        <button class="search-btn" onclick="searchImages(document.getElementById('searchInput').value)">
+            <i class="fas fa-search"></i>
+            Search
+        </button>
+    </div>
+
+    <script src="image_js.js"></script>
+   
+</body>
+</html>
