@@ -28,7 +28,7 @@ def get_response_from_gemma(user_message):
     try:
         # Run the Gemma model using the Ollama CLI with a prompt
         result = subprocess.run(
-            ["ollama", "run", "gemma2", ":","2b",user_message],
+            ["ollama", "run", "f", ":","2b",user_message],
             capture_output=True,
             text=True,
             encoding="utf-8"  # Set encoding to utf-8 to handle special characters
@@ -51,6 +51,18 @@ def get_response_from_gemma(user_message):
 @app.route("/")
 def index():
     return render_template("chatbot.html")
+
+@app.route("/collegeimage")
+def college():
+    return render_template("collegeimage.html")
+
+@app.route("/user")
+def uerlogo():
+    return send_from_directory("static", "user.png")
+
+@app.route("/chatbot")
+def chatbotlogo():
+    return send_from_directory("static", "chatbot.png")
 
 @app.route("/get_history", methods=["GET"])
 def get_history():

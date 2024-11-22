@@ -45,7 +45,7 @@ document.getElementById("send-button").addEventListener("click", sendMessage);
 
             const avatar = document.createElement("img");
             avatar.classList.add("message-avatar");
-            avatar.src = className === "user-message" ? "user.png" : "chatbot.png";
+            avatar.src = className === "user-message" ? "/user" : "/chatbot";
 
             const messageBubble = document.createElement("div");
             messageBubble.classList.add("message-bubble");
