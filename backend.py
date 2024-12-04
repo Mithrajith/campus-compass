@@ -4,6 +4,7 @@ import subprocess
 import os
 import json
 from datetime import datetime
+import glob
 from werkzeug.utils import secure_filename
 
 # Initialize Flask app
@@ -23,12 +24,58 @@ os.makedirs(REVIEWS_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
+
+# Helper Functions
+
+def extract_college_and_intent(user_message):
+    """
+    Extracts the college name and checks if the query is about a review.
+    """
+    review_keywords = ["review", "feedback", "opinion", "rating"]
+    college_name = None
+    is_review_query = False
+
+    # Split the message into words for processing
+    words = user_message.lower().split()
+
+    # Check if the query is about a review
+    is_review_query = any(keyword in words for keyword in review_keywords)
+
+    # Look for a college name based on a simple heuristic
+    if "college" in words:
+        index = words.index("college")
+        if index > 0:  # Ensure there's a preceding word
+            college_name = " ".join(words[max(0, index - 1):index + 1]).title()
+
+    return college_name, is_review_query
+
+
+def search_college_by_name(folder, college_name_query):
+    """
+    Searches JSON files in a folder for reviews matching the college name.
+    """
+    results = []
+    college_name_query_lower = college_name_query.lower()
+    
+    for file_path in glob.glob(os.path.join(folder, "*.json")):
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                
+                if college_name_query_lower in data.get('name', '').lower():
+                    results.append(data)
+        except Exception as e:
+            print(f"Error reading {file_path}: {e}")
+    
+    return results
+
+
 # Chatbot response handler using the Gemma model
 def get_response_from_gemma(user_message):
     try:
         # Run the Gemma model using the Ollama CLI with a prompt
         result = subprocess.run(
-            ["/snap/bin/ollama", "run", "gemma2", ":","2b",user_message],
+            ["/snap/bin/ollama", "run", "gemma2", ":", "2b", user_message],
             capture_output=True,
             text=True,
             encoding="utf-8"  # Set encoding to utf-8 to handle special characters
@@ -64,18 +111,33 @@ def uerlogo():
 def chatbotlogo():
     return send_from_directory("static", "chatbot.png")
 
-# @app.route("/get_history", methods=["GET"])
-# def get_history():
-#     return jsonify({"history": chat_history})
-
 @app.route("/chat", methods=["POST"])
 def chat():
     user_message = request.json.get("message")
     if not user_message:
         return jsonify({"response": "No message received."}), 400
+
+    # Extract college name and intent
+    college_name, is_review_query = extract_college_and_intent(user_message)
     
+    if is_review_query and college_name:
+        # Path to the folder containing JSON files
+        folder_path = REVIEWS_FOLDER
+        
+        # Search for the college review
+        search_results = search_college_by_name(folder_path, college_name)
+        
+        if search_results:
+            response_text = f"Found {len(search_results)} review(s):\n" + "\n".join(
+                [f"College: {res['name']}\nReview: {res['review']}\nDate: {res['submission_date']}\n" for res in search_results]
+            )
+            return jsonify({"response": response_text})
+        else:
+            return jsonify({"response": f"No reviews found for {college_name}."})
+
+    # Fallback to the Gemma model response
     bot_response = get_response_from_gemma(user_message)
-    return jsonify(response=bot_response)
+    return jsonify({"response": bot_response})
 
 
 # Routes for image and review functionality
@@ -103,17 +165,6 @@ def upload_images():
         'message': 'Files uploaded successfully',
         'files': uploaded_files
     })
-
-@app.route('/api/search-images', methods=['GET'])
-def search_images():
-    query = request.args.get('query', '').lower()
-    all_images = os.listdir(app.config['UPLOAD_FOLDER'])
-    matching_images = [img for img in all_images if query in img.lower()] if query else all_images
-    
-    if not matching_images:
-        return jsonify({'message': 'No images found with the specified name.'}), 404
-
-    return jsonify({'images': matching_images})
 
 @app.route('/api/submit-review', methods=['POST'])
 def submit_review():
@@ -163,5 +214,9 @@ def get_reviews():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+#host="0.0.0.0", port="8080",
