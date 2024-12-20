@@ -93,6 +93,30 @@ def get_response_from_gemma(user_message):
         print(f"An error occurred: {e}")
         return f"An error occurred: {e}"
 
+@app.route('/api/search-images', methods=['GET'])
+def search_images():
+    query = request.args.get('query', '').lower()  # Extract query parameter
+    if not query:
+        return jsonify({'error': 'No query provided'}), 400
+
+    # Search for images in the UPLOAD_FOLDER directory
+    matched_images = []
+    for filename in os.listdir(app.config['UPLOAD_FOLDER']):
+        if query in filename.lower():
+            matched_images.append(filename)
+
+    if matched_images:
+        return jsonify({
+            'message': f"Found {len(matched_images)} image(s)",
+            'images': matched_images
+        })
+    else:
+        return jsonify({
+            'message': "No images found",
+            'images': []
+        })
+
+
 
 # Routes for chatbot functionality
 @app.route("/")
@@ -104,7 +128,7 @@ def college():
     return render_template("collegeimage.html")
 
 @app.route("/user")
-def uerlogo():
+def userlogo():
     return send_from_directory("static", "user.png")
 
 @app.route("/chatbot")
